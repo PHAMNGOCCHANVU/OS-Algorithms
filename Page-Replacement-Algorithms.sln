@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Page-Replacement-Algorithms", "Page-Replacement-Algorithms.csproj", "{AF7BDC79-4AE8-EDE4-BEC1-9B31FFB9F5EF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AF7BDC79-4AE8-EDE4-BEC1-9B31FFB9F5EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF7BDC79-4AE8-EDE4-BEC1-9B31FFB9F5EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF7BDC79-4AE8-EDE4-BEC1-9B31FFB9F5EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF7BDC79-4AE8-EDE4-BEC1-9B31FFB9F5EF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {26CDA8F9-65E0-4B5F-9756-32D7F2166F1D}
+	EndGlobalSection
+EndGlobal

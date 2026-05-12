@@ -1,6 +1,6 @@
 using PageReplacementDemo.Models;
 
-namespace PageReplacementDemo.Algorithms;
+namespace PageReplacementDemo.Algorithms.PageReplacementAlgo;
 
 /// <summary>
 /// Thuật toán Clock (Second-Chance) - Sử dụng use bit và con trỏ vòng tròn.

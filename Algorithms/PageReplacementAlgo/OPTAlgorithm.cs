@@ -1,6 +1,6 @@
 using PageReplacementDemo.Models;
 
-namespace PageReplacementDemo.Algorithms;
+namespace PageReplacementDemo.Algorithms.PageReplacementAlgo;
 
 /// <summary>
 /// Thuật toán OPT (Optimal) - Thay thế trang sẽ được tham chiếu xa nhất trong tương lai.

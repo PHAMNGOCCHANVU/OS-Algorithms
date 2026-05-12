@@ -1,11 +1,11 @@
 using PageReplacementDemo.Models;
 
-namespace PageReplacementDemo.Algorithms;
+namespace PageReplacementDemo.Algorithms.PageReplacementAlgo;
 
 /// <summary>
-/// Thuật toán FIFO (First-In, First-Out) - Thay thế trang nạp vào đầu tiên.
+/// Thuật toán LRU (Least Recently Used) - Thay thế trang không được dùng lâu nhất.
 /// </summary>
-public class FIFOAlgorithm : IPageReplacement
+public class LRUAlgorithm : IPageReplacement
 {
     private int _pageCount;
     private int _frameCount;
@@ -24,28 +24,26 @@ public class FIFOAlgorithm : IPageReplacement
         int[] memoryFrames = new int[_frameCount];
         Array.Fill(memoryFrames, -1); // -1 = frame trống
 
-        // Queue để tracking thứ tự FIFO
-        Queue<int> fifoTracker = new Queue<int>(_frameCount);
-        // HashSet để kiểm tra nhanh trang đã có trong frame chưa
-        HashSet<int> inFrames = new HashSet<int>();
+        // List để tracking thứ tự LRU: phần tử đầu = LRU nhất, phần tử cuối = MRU nhất
+        List<int> lruTracker = new List<int>(_frameCount);
         int totalFaults = 0;
 
         for (int i = 0; i < _referenceString.Length; i++)
         {
             int page = _referenceString[i];
-            bool isFault = !inFrames.Contains(page);
+            bool isFault = !lruTracker.Contains(page);
             int? victim = null;
             string message;
 
             if (isFault)
             {
-                if (fifoTracker.Count >= _frameCount)
+                if (lruTracker.Count >= _frameCount)
                 {
-                    // Đầy: lấy trang ở đầu hàng đợi
-                    victim = fifoTracker.Dequeue();
-                    inFrames.Remove(victim.Value);
+                    // Đầy: lấy trang LRU nhất (ở đầu tracker)
+                    victim = lruTracker[0];
+                    lruTracker.RemoveAt(0);
 
-                    // Tìm vị trí victim trong mảng vật lý cố định và thay thế
+                    // Tìm vị trí victim trong mảy vật lý cố định và thay thế
                     int frameIndex = Array.IndexOf(memoryFrames, victim.Value);
                     memoryFrames[frameIndex] = page;
 
@@ -60,14 +58,16 @@ public class FIFOAlgorithm : IPageReplacement
                     message = $"Page Fault! Nạp trang {page} vào frame trống";
                 }
 
-                // Cập nhật tracker
-                fifoTracker.Enqueue(page);
-                inFrames.Add(page);
+                // Cập nhật tracker - thêm vào cuối (MRU nhất)
+                lruTracker.Add(page);
                 totalFaults++;
             }
             else
             {
-                message = $"Hit! Trang {page} đã có trong bộ nhớ";
+                // Hit: di chuyển trang được tham chiếu lên cuối (MRU nhất)
+                lruTracker.Remove(page);
+                lruTracker.Add(page);
+                message = $"Hit! Trang {page} đã có trong bộ nhớ, chuyển lên MRU";
             }
 
             yield return new StepResult(

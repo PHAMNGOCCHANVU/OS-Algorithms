@@ -1,31 +1,21 @@
-using PageReplacementDemo.Algorithms;
+using PageReplacementDemo.Algorithms.PageReplacementAlgo;
 using PageReplacementDemo.Models;
-using System.Reflection;
 
 namespace PageReplacementDemo;
 
 /// <summary>
-/// Engine chịu trách nhiệm vẽ giao diện Console và điều khiển step-by-step.
+/// Engine chịu trách nhiệm vẽ giao diện Console hiển thị kết quả dạng bảng.
+/// Bảng có hàng là frame, cột là tiến trình (reference string index).
 /// </summary>
 public class UIEngine
 {
-    // Kích thước layout
-    private const int TableLeft = 2;
-    private const int TableTop = 5;
-    private const int FrameWidth = 8;
-    private const int MenuLeft = 55;
-    private const int MenuTop = 5;
-    private const int StatusLeft = 2;
-    private const int StatusTop = 18;
-    private const int InputTop = 22;
-
     private int _pageCount;
     private int _frameCount;
     private int[] _referenceString = Array.Empty<int>();
     private string _algorithmName = "";
 
     /// <summary>
-    /// Chạy vòng lặp step-by-step cho thuật toán.
+    /// Chạy thuật toán và hiển thị kết quả dạng bảng.
     /// </summary>
     public void Run(IPageReplacement algorithm, string algorithmName, int pageCount, int frameCount, int[] referenceString)
     {
@@ -35,250 +25,182 @@ public class UIEngine
         _algorithmName = algorithmName;
 
         SafeClear();
-        DrawStaticUI();
 
-        int stepIndex = 0;
-        int totalFaults = 0;
+        // Thực thi tất cả các bước
+        var steps = algorithm.ExecuteStepByStep().ToList();
 
-        foreach (var step in algorithm.ExecuteStepByStep())
-        {
-            stepIndex = step.StepIndex;
-            totalFaults = step.TotalPageFaults;
-            DrawStep(step);
+        // Hiển thị tiêu đề
+        DrawHeader();
 
-            // Nếu còn bước tiếp theo, chờ người dùng nhấn Enter
-            if (stepIndex < _referenceString.Length - 1)
-            {
-                DrawPrompt("Nhấn Enter để xem bước tiếp theo... (hoặc 'q' để quay lại menu)");
-                var key = Console.ReadKey(true);
-                if (key.KeyChar == 'q' || key.KeyChar == 'Q')
-                {
-                    return;
-                }
-            }
-        }
+        // Hiển thị bảng kết quả
+        DrawResultsTable(steps);
 
-        // Kết thúc
-        DrawSummary(stepIndex + 1, totalFaults);
-        DrawPrompt("Hoàn tất! Nhấn phím bất kỳ để quay lại menu...");
+        // Hiển thị thống kê
+        CalculateAndDrawMetrics(steps);
+
+        // Chờ người dùng nhấn phím
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("\nNhấn phím bất kỳ để quay lại menu...");
+        Console.ResetColor();
         Console.ReadKey(true);
     }
 
     /// <summary>
-    /// Vẽ các phần UI tĩnh (khung, menu, reference string).
+    /// Hiển thị tiêu đề thông tin thuật toán.
     /// </summary>
-    private void DrawStaticUI()
+    private void DrawHeader()
     {
         Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("╔══════════════════════════════════════════════════════════════════════════════╗");
-        Console.WriteLine("║                    PAGE REPLACEMENT ALGORITHMS SIMULATOR                     ║");
-        Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝");
+        Console.WriteLine("╔════════════════════════════════════════════════════════════════════════════════╗");
+        Console.WriteLine("║                    PAGE REPLACEMENT ALGORITHMS RESULTS                         ║");
+        Console.WriteLine("╚════════════════════════════════════════════════════════════════════════════════╝");
         Console.ResetColor();
-
-        // Vẽ menu bên phải
-        DrawMenu();
-
-        // Vẽ reference string
-        DrawReferenceString();
-
-        // Vẽ tiêu đề cột frame
-        DrawFrameHeader();
-    }
-
-    /// <summary>
-    /// Vẽ menu thuật toán ở cột phải.
-    /// </summary>
-    private void DrawMenu()
-    {
-        int x = MenuLeft;
-        int y = MenuTop;
 
         Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("╔════════════════════╗");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("║   MENU THUẬT TOÁN  ║");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("╠════════════════════╣");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("║  [1] FIFO          ║");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("║  [2] LRU           ║");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("║  [3] Clock         ║");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("║  [4] OPT           ║");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine("╚════════════════════╝");
+        Console.WriteLine($"\nThuật toán: {_algorithmName}");
+        Console.WriteLine($"Số trang: {_pageCount} | Số frame: {_frameCount} | Độ dài chuỗi tham chiếu: {_referenceString.Length}");
         Console.ResetColor();
 
-        // Hiển thị thông tin process
-        y++;
-        Console.SetCursorPosition(x, y++);
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Đang chạy: {_algorithmName}");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine($"Số trang: {_pageCount}");
-        Console.SetCursorPosition(x, y++);
-        Console.WriteLine($"Số frame: {_frameCount}");
-        Console.ResetColor();
+        Console.WriteLine();
     }
 
     /// <summary>
-    /// Vẽ reference string phía trên bảng frame.
+    /// Hiển thị bảng kết quả: hàng là frame, cột là bước thực thi.
     /// </summary>
-    private void DrawReferenceString()
+    private void DrawResultsTable(List<StepResult> steps)
     {
-        Console.SetCursorPosition(TableLeft, TableTop - 1);
+        // Xác định độ rộng của mỗi cột (2 ký tự + 1 khoảng trắng)
+        const int colWidth = 3;
+        
+        // Hiển thị dòng tiêu đề (reference string index)
         Console.ForegroundColor = ConsoleColor.White;
-        Console.Write("Reference String: ");
-        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.Write("Frame".PadRight(8));
+        
         for (int i = 0; i < _referenceString.Length; i++)
         {
-            Console.Write($"{_referenceString[i]}  ");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Write($"[{i}]".PadRight(colWidth));
         }
         Console.ResetColor();
-    }
+        Console.WriteLine();
 
-    /// <summary>
-    /// Vẽ tiêu đề các cột frame.
-    /// </summary>
-    private void DrawFrameHeader()
-    {
-        int x = TableLeft;
-        int y = TableTop;
-
-        Console.SetCursorPosition(x, y);
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write("Step".PadRight(6));
-
+        // Hiển thị dòng giá trị reference string
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write("Ref".PadRight(8));
         for (int i = 0; i < _referenceString.Length; i++)
         {
-            Console.SetCursorPosition(x + 6 + i * FrameWidth, y);
-            Console.Write($"  [{i}]  ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write($"{_referenceString[i]}".PadRight(colWidth));
         }
         Console.ResetColor();
-    }
+        Console.WriteLine();
 
-    /// <summary>
-    /// Vẽ một bước xử lý lên bảng.
-    /// </summary>
-    private void DrawStep(StepResult step)
-    {
-        int x = TableLeft;
-        int y = TableTop + 1 + step.StepIndex;
-
-        // Vẽ số thứ tự bước
-        Console.SetCursorPosition(x, y);
+        // Dòng separator
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write($"B{step.StepIndex}".PadRight(6));
+        Console.Write(new string('─', 8));
+        for (int i = 0; i < _referenceString.Length; i++)
+        {
+            Console.Write(new string('─', colWidth));
+        }
         Console.ResetColor();
+        Console.WriteLine();
 
-        // Vẽ các frame
-        int colX = x + 6 + step.StepIndex * FrameWidth;
-        Console.SetCursorPosition(colX, y);
-
-        if (step.IsPageFault)
-        {
-            Console.BackgroundColor = ConsoleColor.DarkRed;
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-        else
-        {
-            Console.BackgroundColor = ConsoleColor.DarkGreen;
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-
-        // Hiển thị trạng thái frames tại bước này
-        string frameStr = "";
-        for (int i = 0; i < _frameCount; i++)
-        {
-            if (step.Frames[i] == -1)
-            {
-                frameStr += " _ ";
-            }
-            else
-            {
-                frameStr += $" {step.Frames[i]} ";
-            }
-        }
-        Console.Write(frameStr.PadRight(FrameWidth - 1));
-        Console.ResetColor();
-
-        // Vẽ message ở dòng status
-        DrawStatusMessage(step);
-    }
-
-    /// <summary>
-    /// Đếm số frame đang có dữ liệu (khác -1).
-    /// </summary>
-    private static int GetOccupiedCount(StepResult step)
-    {
-        int count = 0;
-        foreach (var p in step.Frames)
-        {
-            if (p != -1) count++;
-        }
-        return count;
-    }
-
-    /// <summary>
-    /// Lấy chiều rộng console an toàn (mặc định 80 nếu lỗi).
-    /// </summary>
-    private static int GetWindowWidth()
-    {
-        try { return Console.WindowWidth; }
-        catch { return 80; }
-    }
-
-    /// <summary>
-    /// Vẽ dòng thông báo trạng thái.
-    /// </summary>
-    private void DrawStatusMessage(StepResult step)
-    {
-        int x = StatusLeft;
-        int y = StatusTop;
-
-        Console.SetCursorPosition(x, y);
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.Write(new string(' ', GetWindowWidth() - x - 1)); // Xóa dòng cũ
-        Console.SetCursorPosition(x, y);
-
-        if (step.IsPageFault)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write($"[Bước {step.StepIndex}] ");
-            Console.ResetColor();
-            Console.Write(step.Message);
-        }
-        else
+        // Hiển thị từng frame
+        for (int frameIdx = 0; frameIdx < _frameCount; frameIdx++)
         {
             Console.ForegroundColor = ConsoleColor.Green;
-            Console.Write($"[Bước {step.StepIndex}] ");
+            Console.Write($"F{frameIdx}".PadRight(8));
             Console.ResetColor();
-            Console.Write(step.Message);
+
+            for (int stepIdx = 0; stepIdx < steps.Count; stepIdx++)
+            {
+                var step = steps[stepIdx];
+                int pageInFrame = step.Frames[frameIdx];
+
+                if (pageInFrame == -1)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write("_".PadRight(colWidth));
+                }
+                else
+                {
+                    // Tô màu đỏ nếu page fault, xanh nếu không
+                    if (step.IsPageFault)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                    }
+                    Console.Write($"{pageInFrame}".PadRight(colWidth));
+                }
+                Console.ResetColor();
+            }
+
+            Console.WriteLine();
         }
 
-        // Hiển thị tổng page fault
-        Console.SetCursorPosition(x, y + 1);
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.Write($"Tổng Page Faults: {step.TotalPageFaults}/{_referenceString.Length}");
-        Console.ResetColor();
+        Console.WriteLine();
     }
 
     /// <summary>
-    /// Vẽ dòng nhắc nhở người dùng.
+    /// Lấy màu cho một page dựa trên page number.
     /// </summary>
-    private void DrawPrompt(string message)
+    private ConsoleColor GetPageColor(int pageNumber)
     {
-        int x = StatusLeft;
-        int y = InputTop;
+        return pageNumber switch
+        {
+            0 => ConsoleColor.Blue,
+            1 => ConsoleColor.Red,
+            2 => ConsoleColor.Yellow,
+            3 => ConsoleColor.Cyan,
+            4 => ConsoleColor.Green,
+            5 => ConsoleColor.Magenta,
+            6 => ConsoleColor.White,
+            7 => ConsoleColor.Gray,
+            _ => ConsoleColor.DarkYellow
+        };
+    }
 
-        Console.SetCursorPosition(x, y);
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write(new string(' ', GetWindowWidth() - x - 1)); // Xóa dòng cũ
-        Console.SetCursorPosition(x, y);
-        Console.Write(message);
+    /// <summary>
+    /// Tính toán và hiển thị các chỉ số hiệu suất.
+    /// </summary>
+    private void CalculateAndDrawMetrics(List<StepResult> steps)
+    {
+        if (steps.Count == 0)
+            return;
+
+        // Đếm page faults
+        int totalPageFaults = 0;
+        foreach (var step in steps)
+        {
+            if (step.IsPageFault)
+                totalPageFaults++;
+        }
+
+        // Tính hit rate
+        int hits = steps.Count - totalPageFaults;
+        double hitRate = (double)hits / steps.Count * 100;
+        double faultRate = (double)totalPageFaults / steps.Count * 100;
+
+        // Tính memory utilization (trung bình số frame được sử dụng)
+        double totalFramesUsed = 0;
+        foreach (var step in steps)
+        {
+            int occupiedFrames = 0;
+            for (int i = 0; i < _frameCount; i++)
+            {
+                if (step.Frames[i] != -1)
+                    occupiedFrames++;
+            }
+            totalFramesUsed += occupiedFrames;
+        }
+        double avgMemoryUtilization = (totalFramesUsed / steps.Count) / _frameCount * 100;
+
+        // Hiển thị thống kê
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Page Faults: {totalPageFaults}/{steps.Count} | Hit Rate: {hitRate:F2}% | Fault Rate: {faultRate:F2}%");
         Console.ResetColor();
     }
 
@@ -301,40 +223,6 @@ public class UIEngine
             }
             catch { }
             try { Console.SetCursorPosition(0, 0); } catch { }
-        }
-    }
-
-    /// <summary>
-    /// Vẽ thông tin tổng kết sau khi hoàn tất.
-    /// </summary>
-    private void DrawSummary(int totalSteps, int totalFaults)
-    {
-        try
-        {
-            int x = StatusLeft;
-            int y = StatusTop + 3;
-
-            // Kiểm tra vị trí hợp lệ trước khi set cursor
-            if (y < Console.BufferHeight && x < Console.BufferWidth)
-            {
-                Console.SetCursorPosition(x, y);
-            }
-            
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("══════════════════════ KẾT THÚC ══════════════════════");
-            Console.WriteLine($"Thuật toán: {_algorithmName}");
-            Console.WriteLine($"Tổng số bước: {totalSteps}");
-            Console.WriteLine($"Tổng Page Faults: {totalFaults}");
-            Console.WriteLine($"Tỉ lệ Page Fault: {(double)totalFaults / totalSteps * 100:F2}%");
-            Console.ResetColor();
-        }
-        catch
-        {
-            // Nếu có lỗi cursor position, vẫn in ra thông tin
-            Console.WriteLine("\n══════════════════════ KẾT THÚC ══════════════════════");
-            Console.WriteLine($"Thuật toán: {_algorithmName}");
-            Console.WriteLine($"Tổng số bước: {totalSteps}");
-            Console.WriteLine($"Tổng Page Faults: {totalFaults}");
         }
     }
 }

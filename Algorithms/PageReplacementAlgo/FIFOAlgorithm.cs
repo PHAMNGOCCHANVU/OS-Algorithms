@@ -1,11 +1,11 @@
 using PageReplacementDemo.Models;
 
-namespace PageReplacementDemo.Algorithms;
+namespace PageReplacementDemo.Algorithms.PageReplacementAlgo;
 
 /// <summary>
-/// Thuật toán LRU (Least Recently Used) - Thay thế trang không được dùng lâu nhất.
+/// Thuật toán FIFO (First-In, First-Out) - Thay thế trang nạp vào đầu tiên.
 /// </summary>
-public class LRUAlgorithm : IPageReplacement
+public class FIFOAlgorithm : IPageReplacement
 {
     private int _pageCount;
     private int _frameCount;
@@ -24,24 +24,26 @@ public class LRUAlgorithm : IPageReplacement
         int[] memoryFrames = new int[_frameCount];
         Array.Fill(memoryFrames, -1); // -1 = frame trống
 
-        // List để tracking thứ tự LRU: phần tử đầu = LRU nhất, phần tử cuối = MRU nhất
-        List<int> lruTracker = new List<int>(_frameCount);
+        // Queue để tracking thứ tự FIFO
+        Queue<int> fifoTracker = new Queue<int>(_frameCount);
+        // HashSet để kiểm tra nhanh trang đã có trong frame chưa
+        HashSet<int> inFrames = new HashSet<int>();
         int totalFaults = 0;
 
         for (int i = 0; i < _referenceString.Length; i++)
         {
             int page = _referenceString[i];
-            bool isFault = !lruTracker.Contains(page);
+            bool isFault = !inFrames.Contains(page);
             int? victim = null;
             string message;
 
             if (isFault)
             {
-                if (lruTracker.Count >= _frameCount)
+                if (fifoTracker.Count >= _frameCount)
                 {
-                    // Đầy: lấy trang LRU nhất (ở đầu tracker)
-                    victim = lruTracker[0];
-                    lruTracker.RemoveAt(0);
+                    // Đầy: lấy trang ở đầu hàng đợi
+                    victim = fifoTracker.Dequeue();
+                    inFrames.Remove(victim.Value);
 
                     // Tìm vị trí victim trong mảy vật lý cố định và thay thế
                     int frameIndex = Array.IndexOf(memoryFrames, victim.Value);
@@ -58,16 +60,14 @@ public class LRUAlgorithm : IPageReplacement
                     message = $"Page Fault! Nạp trang {page} vào frame trống";
                 }
 
-                // Cập nhật tracker - thêm vào cuối (MRU nhất)
-                lruTracker.Add(page);
+                // Cập nhật tracker
+                fifoTracker.Enqueue(page);
+                inFrames.Add(page);
                 totalFaults++;
             }
             else
             {
-                // Hit: di chuyển trang được tham chiếu lên cuối (MRU nhất)
-                lruTracker.Remove(page);
-                lruTracker.Add(page);
-                message = $"Hit! Trang {page} đã có trong bộ nhớ, chuyển lên MRU";
+                message = $"Hit! Trang {page} đã có trong bộ nhớ";
             }
 
             yield return new StepResult(

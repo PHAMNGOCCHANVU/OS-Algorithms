@@ -1,6 +1,6 @@
 using PageReplacementDemo.Models;
 
-namespace PageReplacementDemo.Algorithms;
+namespace PageReplacementDemo.Algorithms.PageReplacementAlgo;
 
 /// <summary>
 /// Interface chuẩn cho mọi thuật toán thay thế trang.

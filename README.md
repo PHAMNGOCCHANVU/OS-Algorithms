@@ -1,4 +1,4 @@
-# Page Replacement Algorithms
+# OS Algorithms
 
 Ứng dụng Console thực thi và trực quan hóa các thuật toán thay thế trang (Page Replacement), lập lịch CPU (CPU Scheduling), và thuật toán Banker trong hệ điều hành.
 
@@ -155,10 +155,4 @@ dotnet restore
 dotnet build
 ```
 
-## Thông tin liên hệ
 
-Nếu có bất kỳ vấn đề hoặc đề xuất, vui lòng tạo Issue hoặc Pull Request.
-
-## License
-
-Dự án này được phát hành theo giấy phép MIT.

@@ -191,8 +191,7 @@ public class UIEngine
     }
 
     /// <summary>
-    /// Hiển thị từng bước WITHOUT clearing screen (accumulative display).
-    /// Mỗi bước mới được in thêm vào dưới các bước cũ.
+    /// Hiển thị tất cả bước trong một bảng hoàn chỉnh (không phải từng bước từng bước).
     /// </summary>
     public void RunStepByStepAccumulative(IPageReplacement algorithm, string algorithmName, int pageCount, int frameCount, int[] referenceString)
     {
@@ -206,24 +205,69 @@ public class UIEngine
         // Thực thi tất cả các bước
         var steps = algorithm.ExecuteStepByStep().ToList();
 
-        // Hiển thị tiêu đề
-        DrawHeaderStepByStep();
+        // Hiển thị tiêu đề khung
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("╔═════════════════════════════════════════════════════╗");
+        Console.WriteLine("║     PAGE REPLACEMENT ALGORITHMS                     ║");
+        Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+        Console.ResetColor();
+        Console.WriteLine();
 
-        // Hiển thị từng bước MÀ KHÔNG xóa màn hình
+        // Hiển thị thông tin thuật toán
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Thuật toán: {_algorithmName}");
+        Console.WriteLine($"Page: {_pageCount} Frame: {_frameCount} Ref: {string.Join(" ", _referenceString)}");
+        Console.ResetColor();
+        Console.WriteLine();
+
+        // Hiển thị tiêu đề bảng
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine($"{"Step",-6} {"Ref",-6} {"Frame",-40} {"Status",-8}");
+        Console.WriteLine(new string('─', 75));
+        Console.ResetColor();
+
+        // Hiển thị TẤT CẢ các bước cùng lúc
         for (int i = 0; i < steps.Count; i++)
         {
-            // In bước mới trực tiếp mà không clear
-            DrawStepByStepTable(steps[i], steps, i);
-
-            if (i < steps.Count - 1)
+            var currentStep = steps[i];
+            
+            // Cột Step
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write($"{i + 1,-6}");
+            
+            // Cột Ref
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write($"{currentStep.CurrentPage,-6}");
+            Console.ResetColor();
+            
+            // Cột Frame
+            Console.ForegroundColor = ConsoleColor.Green;
+            string frameStr = "[ ";
+            for (int j = 0; j < _frameCount; j++)
             {
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine("Nhấn Enter để xem bước kế tiếp...");
-                Console.ResetColor();
-                Console.ReadLine();
-                // KHÔNG GỌI SafeClear() ở đây - đây là sự khác biệt chính
+                if (currentStep.Frames[j] == -1)
+                    frameStr += "_ ";
+                else
+                    frameStr += currentStep.Frames[j] + " ";
             }
+            frameStr += "]";
+            Console.Write($"{frameStr,-40}");
+            Console.ResetColor();
+            
+            // Cột Status
+            Console.ForegroundColor = currentStep.IsPageFault ? ConsoleColor.Red : ConsoleColor.Green;
+            string status = currentStep.IsPageFault ? "F" : "";
+            Console.Write($"{status,-8}");
+            Console.ResetColor();
+            
+            Console.WriteLine();
         }
+
+        // Hiển thị hướng dẫn nhấn Enter
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("Nhấn Enter để xem bước kế tiếp...");
+        Console.ResetColor();
+        Console.ReadLine();
 
         // Hiển thị thống kê cuối cùng
         Console.WriteLine();

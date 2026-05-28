@@ -480,3 +480,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+ALGORITHM_EXPLANATIONS.md
+improve.txt
+prompt.txt
+status-codebase.md

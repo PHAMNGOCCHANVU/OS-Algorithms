@@ -1,4 +1,5 @@
 using PageReplacementDemo.Models;
+using PageReplacementDemo.Models.BankerAlgo;
 
 namespace PageReplacementDemo.Algorithms.BankerAlgo;
 

@@ -1,4 +1,4 @@
-namespace PageReplacementDemo.Models;
+namespace PageReplacementDemo.Models.CPUSchedulingAlgo;
 
 /// <summary>
 /// Represents a step in CPU scheduling algorithm execution.

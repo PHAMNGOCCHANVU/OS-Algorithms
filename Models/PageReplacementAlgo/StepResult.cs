@@ -1,4 +1,4 @@
-namespace PageReplacementDemo.Models;
+namespace PageReplacementDemo.Models.PageReplacementAlgo;
 
 /// <summary>
 /// Lưu trữ trạng thái của một bước xử lý trong thuật toán.

@@ -1,5 +1,7 @@
 using PageReplacementDemo.Algorithms.CPUschedulingAlgo;
 using PageReplacementDemo.Models;
+using PageReplacementDemo.Models.CPUSchedulingAlgo;
+using PageReplacementDemo.Models.BankerAlgo;
 
 namespace PageReplacementDemo;
 

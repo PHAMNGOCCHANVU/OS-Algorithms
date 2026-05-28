@@ -1,4 +1,5 @@
 using PageReplacementDemo.Models;
+using PageReplacementDemo.Models.PageReplacementAlgo;
 
 namespace PageReplacementDemo.Algorithms.PageReplacementAlgo;
 

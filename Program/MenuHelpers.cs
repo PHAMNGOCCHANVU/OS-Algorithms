@@ -117,6 +117,8 @@ public static class MenuHelpers
         Console.WriteLine("  [2] LRU   - Least Recently Used");
         Console.WriteLine("  [3] Clock - Second-Chance (Clock)");
         Console.WriteLine("  [4] OPT   - Optimal (MIN)");
+        Console.WriteLine("  [5] So sánh");
+        Console.WriteLine("  [6] Đọc dữ liệu từ file text");
         Console.WriteLine();
         Console.WriteLine("  [0] Quay lại Menu Chính");
         Console.WriteLine();
@@ -126,9 +128,9 @@ public static class MenuHelpers
     {
         while (true)
         {
-            Console.Write("Nhập lựa chọn (0-4): ");
+            Console.Write("Nhập lựa chọn (0-6): ");
             string? input = Console.ReadLine();
-            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 4)
+            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 6)
             {
                 return choice;
             }

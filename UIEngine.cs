@@ -1,5 +1,6 @@
 using PageReplacementDemo.Algorithms.PageReplacementAlgo;
 using PageReplacementDemo.Models;
+using PageReplacementDemo.Models.PageReplacementAlgo;
 
 namespace PageReplacementDemo;
 
@@ -141,6 +142,228 @@ public class UIEngine
             Console.WriteLine();
         }
 
+        Console.WriteLine();
+    }
+
+    /// <summary>
+    /// Chạy thuật toán với hiển thị từng bước theo kiểu bảng.
+    /// </summary>
+    public void RunStepByStep(IPageReplacement algorithm, string algorithmName, int pageCount, int frameCount, int[] referenceString)
+    {
+        _pageCount = pageCount;
+        _frameCount = frameCount;
+        _referenceString = referenceString;
+        _algorithmName = algorithmName;
+
+        SafeClear();
+
+        // Thực thi tất cả các bước
+        var steps = algorithm.ExecuteStepByStep().ToList();
+
+        // Hiển thị tiêu đề
+        DrawHeaderStepByStep();
+
+        // Hiển thị từng bước
+        for (int i = 0; i < steps.Count; i++)
+        {
+            DrawStepByStepTable(steps[i], steps, i);
+
+            if (i < steps.Count - 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("Nhấn Enter để xem bước kế tiếp...");
+                Console.ResetColor();
+                Console.ReadLine();
+                SafeClear();
+                DrawHeaderStepByStep();
+            }
+        }
+
+        // Hiển thị thống kê cuối cùng
+        Console.WriteLine();
+        CalculateAndDrawMetrics(steps);
+
+        // Chờ người dùng nhấn phím
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("\nNhấn phím bất kỳ để quay lại menu...");
+        Console.ResetColor();
+        Console.ReadKey(true);
+    }
+
+    /// <summary>
+    /// Hiển thị từng bước WITHOUT clearing screen (accumulative display).
+    /// Mỗi bước mới được in thêm vào dưới các bước cũ.
+    /// </summary>
+    public void RunStepByStepAccumulative(IPageReplacement algorithm, string algorithmName, int pageCount, int frameCount, int[] referenceString)
+    {
+        _pageCount = pageCount;
+        _frameCount = frameCount;
+        _referenceString = referenceString;
+        _algorithmName = algorithmName;
+
+        SafeClear();
+
+        // Thực thi tất cả các bước
+        var steps = algorithm.ExecuteStepByStep().ToList();
+
+        // Hiển thị tiêu đề
+        DrawHeaderStepByStep();
+
+        // Hiển thị từng bước MÀ KHÔNG xóa màn hình
+        for (int i = 0; i < steps.Count; i++)
+        {
+            // In bước mới trực tiếp mà không clear
+            DrawStepByStepTable(steps[i], steps, i);
+
+            if (i < steps.Count - 1)
+            {
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("Nhấn Enter để xem bước kế tiếp...");
+                Console.ResetColor();
+                Console.ReadLine();
+                // KHÔNG GỌI SafeClear() ở đây - đây là sự khác biệt chính
+            }
+        }
+
+        // Hiển thị thống kê cuối cùng
+        Console.WriteLine();
+        CalculateAndDrawMetrics(steps);
+
+        // Chờ người dùng nhấn phím
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("\nNhấn phím bất kỳ để quay lại menu...");
+        Console.ResetColor();
+        Console.ReadKey(true);
+    }
+
+    /// <summary>
+    /// Chạy so sánh các thuật toán và hiển thị kết quả MỘT LẦN (không nhấn enter từng bước).
+    /// </summary>
+    public void RunComparisonFromFileNoStep(
+        IPageReplacement fifoAlgo, 
+        IPageReplacement lruAlgo, 
+        IPageReplacement clockAlgo, 
+        IPageReplacement optAlgo, 
+        int pageCount, 
+        int frameCount, 
+        int[] referenceString)
+    {
+        SafeClear();
+        
+        var results = new List<(string name, int faults, int total, double hitRate, double faultRate)>();
+
+        // Chạy tất cả 4 thuật toán (KHÔNG hiển thị từng bước)
+        var algorithms = new[] 
+        { 
+            (fifoAlgo, "FIFO"), 
+            (lruAlgo, "LRU"), 
+            (clockAlgo, "Clock"), 
+            (optAlgo, "OPT") 
+        };
+
+        foreach (var (algo, name) in algorithms)
+        {
+            var steps = algo.ExecuteStepByStep().ToList();
+            int faults = steps.Count(s => s.IsPageFault);
+            int total = steps.Count;
+            double hitRate = ((double)(total - faults) / total) * 100;
+            double faultRate = ((double)faults / total) * 100;
+            
+            results.Add((name, faults, total, hitRate, faultRate));
+        }
+
+        // Tính xếp hạng dựa trên page faults
+        var rankedResults = results
+            .OrderBy(r => r.faults)
+            .Select((r, idx) => (r.name, r.faults, r.total, r.hitRate, r.faultRate, rank: idx + 1))
+            .ToList();
+
+        // Hiển thị bảng so sánh MỘT LẦN (không nhấn enter từng bước)
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Thuật toán: So Sánh");
+        Console.WriteLine($"Page: {pageCount} Frame: {frameCount} Ref: {string.Join(" ", referenceString)}");
+        Console.ResetColor();
+        Console.WriteLine();
+
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine(new string('_', 80));
+        Console.ResetColor();
+        Console.WriteLine();
+
+        // Bảng so sánh
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine($"{"Thuật toán",-15} {"Page Faults",-20} {"Hit Rate",-20} {"Fault Rate",-20} {"Rank",-8}");
+        Console.WriteLine(new string('─', 80));
+        Console.ResetColor();
+
+        foreach (var (name, faults, total, hitRate, faultRate, rank) in rankedResults)
+        {
+            Console.ForegroundColor = rank == 1 ? ConsoleColor.Green : ConsoleColor.White;
+            Console.WriteLine($"{name,-15} {faults}/{total,-18} {hitRate:F2}%{" ",-15} {faultRate:F2}%{" ",-15} {rank,-8}");
+            Console.ResetColor();
+        }
+
+        Console.WriteLine();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("Nhấn phím bất kỳ để quay lại menu...");
+        Console.ResetColor();
+        Console.ReadKey(true);
+    }
+
+    /// <summary>
+    /// Hiển thị tiêu đề cho chế độ từng bước.
+    /// </summary>
+    private void DrawHeaderStepByStep()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine($"Thuật toán: {_algorithmName}");
+        Console.WriteLine($"Page: {_pageCount} Frame: {_frameCount} Ref: {string.Join(" ", _referenceString)}");
+        Console.ResetColor();
+        Console.WriteLine();
+    }
+
+    /// <summary>
+    /// Hiển thị một bước duy nhất theo định dạng bảng: Step | Ref | Frame | Status
+    /// </summary>
+    private void DrawStepByStepTable(StepResult currentStep, List<StepResult> allSteps, int currentStepIndex)
+    {
+        // Hiển thị tiêu đề bảng
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine($"{"Step",-6} {"Ref",-6} {"Frame",-40} {"Status",-8}");
+        Console.WriteLine(new string('─', 75));
+        Console.ResetColor();
+
+        // Hiển thị thông tin bước hiện tại
+        Console.ForegroundColor = ConsoleColor.White;
+        
+        // Cột Step
+        Console.Write($"{currentStepIndex + 1,-6}");
+        
+        // Cột Ref
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.Write($"{currentStep.CurrentPage,-6}");
+        Console.ResetColor();
+        
+        // Cột Frame - hiển thị trạng thái frame
+        Console.ForegroundColor = ConsoleColor.Green;
+        string frameStr = "[ ";
+        for (int i = 0; i < _frameCount; i++)
+        {
+            if (currentStep.Frames[i] == -1)
+                frameStr += "_ ";
+            else
+                frameStr += currentStep.Frames[i] + " ";
+        }
+        frameStr += "]";
+        Console.Write($"{frameStr,-40}");
+        Console.ResetColor();
+        
+        // Cột Status
+        Console.ForegroundColor = currentStep.IsPageFault ? ConsoleColor.Red : ConsoleColor.Green;
+        string status = currentStep.IsPageFault ? "F" : "";
+        Console.Write($"{status,-8}");
+        Console.ResetColor();
+        
         Console.WriteLine();
     }
 

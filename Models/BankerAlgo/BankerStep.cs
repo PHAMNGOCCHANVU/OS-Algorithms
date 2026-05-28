@@ -1,4 +1,4 @@
-namespace PageReplacementDemo.Models;
+namespace PageReplacementDemo.Models.BankerAlgo;
 
 /// <summary>
 /// Represents a step in Banker's Algorithm execution.

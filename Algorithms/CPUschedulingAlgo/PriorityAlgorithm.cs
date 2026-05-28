@@ -1,4 +1,5 @@
 using PageReplacementDemo.Models;
+using PageReplacementDemo.Models.CPUSchedulingAlgo;
 
 namespace PageReplacementDemo.Algorithms.CPUschedulingAlgo;
 

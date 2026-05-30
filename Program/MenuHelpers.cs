@@ -18,7 +18,7 @@ public static class MenuHelpers
         Console.WriteLine("Chọn bộ thuật toán cần mô phỏng:");
         Console.WriteLine();
         Console.WriteLine("  [1] CPU Scheduling Algorithms (Định thời CPU)");
-        Console.WriteLine("  [2] Banker's Algorithm (Xử lý Deadlock)");
+        Console.WriteLine("  [2] Deadlock's Algorithm (Xử lý Deadlock - Resource Allocation)");
         Console.WriteLine("  [3] Page Replacement Algorithms (Thay thế trang)");
         Console.WriteLine();
         Console.WriteLine("  [0] Thoát");
@@ -131,6 +131,112 @@ public static class MenuHelpers
             Console.Write("Nhập lựa chọn (0-6): ");
             string? input = Console.ReadLine();
             if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 6)
+            {
+                return choice;
+            }
+            Console.WriteLine("Lựa chọn không hợp lệ! Vui lòng nhập lại.");
+        }
+    }
+
+    public static void ShowCPUSchedulingDataSourceMenu()
+    {
+        DisplayHelpers.SafeClear();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("╔═════════════════════════════════════════════════════╗");
+        Console.WriteLine("║   HỆ THỐNG MỎ PHỎNG ĐỊNH THỜI CPU                  ║");
+        Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.WriteLine("  [1] Nhập dữ liệu thủ công");
+        Console.WriteLine("  [2] Dùng bộ Test Case mẫu (có sẵn)");
+        Console.WriteLine();
+        Console.WriteLine("  [0] Quay lại");
+        Console.WriteLine();
+    }
+
+    public static void ShowDataSourceMenu()
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("\nChọn nguồn dữ liệu:");
+        Console.ResetColor();
+        Console.WriteLine("  [1] Nhập dữ liệu thủ công");
+        Console.WriteLine("  [2] Tải từ file Test Case");
+        Console.WriteLine("  [0] Quay lại");
+        Console.WriteLine();
+    }
+
+    public static int GetDataSourceChoice()
+    {
+        while (true)
+        {
+            Console.Write("Nhập lựa chọn (0-2): ");
+            string? input = Console.ReadLine();
+            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 2)
+            {
+                return choice;
+            }
+            Console.WriteLine("Lựa chọn không hợp lệ! Vui lòng nhập lại.");
+        }
+    }
+
+    public static void ShowDeadlockSystemMenu()
+    {
+        DisplayHelpers.SafeClear();
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("╔═════════════════════════════════════════════════════╗");
+        Console.WriteLine("║   CHUƠNG TRÌNH QUẢN LÝ TÀI NGUYÊN & DEADLOCK       ║");
+        Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.WriteLine("  [1] Nhập dữ liệu hệ thống từ bàn phím");
+        Console.WriteLine("  [2] Đọc dữ liệu hệ thống từ file .txt");
+        Console.WriteLine("  [3] Kiểm tra trạng thái An toàn (Banker's Safety)");
+        Console.WriteLine("  [4] Yêu cầu cấp phát tài nguyên (Resource-Request)");
+        Console.WriteLine("  [5] Kiểm tra Deadlock hiện tại (Deadlock Detection)");
+        Console.WriteLine("  [6] Phục hồi khỏi Deadlock (Deadlock Recovery)");
+        Console.WriteLine();
+        Console.WriteLine("  [0] Thoát");
+        Console.WriteLine();
+    }
+
+    public static int GetDeadlockSystemChoice()
+    {
+        while (true)
+        {
+            Console.Write("Nhập lựa chọn (0-6): ");
+            string? input = Console.ReadLine();
+            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 6)
+            {
+                return choice;
+            }
+            Console.WriteLine("Lựa chọn không hợp lệ! Vui lòng nhập lại.");
+        }
+    }
+
+    public static void ShowDeadlockMenu()
+    {
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("╔═════════════════════════════════════════════════════╗");
+        Console.WriteLine("║         DEADLOCK DETECTION                          ║");
+        Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+        Console.ResetColor();
+        Console.WriteLine();
+        Console.WriteLine("Chọn lựa chọn:");
+        Console.WriteLine();
+        Console.WriteLine("  [1] Phát hiện Deadlock (Manual Input)");
+        Console.WriteLine("  [2] Tải từ File Test Case");
+        Console.WriteLine();
+        Console.WriteLine("  [0] Quay lại Menu Chính");
+        Console.WriteLine();
+    }
+
+    public static int GetDeadlockChoice()
+    {
+        while (true)
+        {
+            Console.Write("Nhập lựa chọn (0-2): ");
+            string? input = Console.ReadLine();
+            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 2)
             {
                 return choice;
             }

@@ -57,6 +57,21 @@ public class Process
         WaitingTime = 0;
     }
 
+    /// <summary>
+    /// Copy constructor for creating a clone of a process
+    /// </summary>
+    public Process(Process other)
+    {
+        Id = other.Id;
+        ArrivalTime = other.ArrivalTime;
+        BurstTime = other.BurstTime;
+        Priority = other.Priority;
+        RemainingTime = other.RemainingTime;
+        CompletionTime = other.CompletionTime;
+        TurnaroundTime = other.TurnaroundTime;
+        WaitingTime = other.WaitingTime;
+    }
+
     public override string ToString()
     {
         return $"P{Id}(AT:{ArrivalTime},BT:{BurstTime},PR:{Priority})";

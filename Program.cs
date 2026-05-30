@@ -1,8 +1,10 @@
 ﻿using PageReplacementDemo.Algorithms.PageReplacementAlgo;
 using PageReplacementDemo.Algorithms.CPUschedulingAlgo;
 using PageReplacementDemo.Algorithms.BankerAlgo;
+using PageReplacementDemo.Algorithms.DeadlockDetection;
 using PageReplacementDemo.Models.PageReplacementAlgo;
 using PageReplacementDemo.Program;
+using PageReplacementDemo.Models;
 
 namespace PageReplacementDemo
 {
@@ -45,10 +47,10 @@ namespace PageReplacementDemo
                         HandleCPUScheduling();
                         break;
                     case 2:
-                        HandleBankerAlgorithm();
+                        HandleDeadlockSystem();
                         break;
                     case 3:
-                        HandlePageReplacement();
+                        HandlePageReplacement(ui);
                         break;
                     case 0:
                         return; // Exit
@@ -60,6 +62,20 @@ namespace PageReplacementDemo
 
         // ============ CPU SCHEDULING ============
         static void HandleCPUScheduling()
+        {
+            while (true)
+            {
+                DisplayHelpers.SafeClear();
+                MenuHelpers.ShowDataSourceMenu();
+                int dataSource = MenuHelpers.GetDataSourceChoice();
+
+                if (dataSource == 0) break;
+                if (dataSource == 1) HandleCPUSchedulingManualInput();
+                else if (dataSource == 2) HandleCPUSchedulingFileInput();
+            }
+        }
+
+        static void HandleCPUSchedulingManualInput()
         {
             while (true)
             {
@@ -76,54 +92,336 @@ namespace PageReplacementDemo
                     quantumTime = InputHelpers.GetQuantumTime();
                 }
 
-                var processes = InputHelpers.GetProcesses(numProcesses, choice == 5); // choice 5 = Priority
-                var result = CPUSchedulingExecutor.ExecuteAlgorithm(processes, choice, quantumTime);
-
-                DisplayHelpers.DisplayCPUSchedulingResult(choice, result);
-                
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("\nNhấn phím bất kỳ để trở lại menu CPU Scheduling...");
-                Console.ResetColor();
-                Console.ReadKey(true);
-            }
-        }
-
-        // ============ BANKER'S ALGORITHM ============
-        static void HandleBankerAlgorithm()
-        {
-            while (true)
-            {
-                DisplayHelpers.SafeClear();
-                MenuHelpers.ShowBankerMenu();
-
-                int choice = MenuHelpers.GetBankerChoice();
-                if (choice == 0) break;
-
-                if (choice == 1)
+                var processes = InputHelpers.GetProcesses(numProcesses, choice == 5);
+                string algoName = choice switch
                 {
-                    int numProcesses = InputHelpers.GetProcessCount();
-                    int numResources = InputHelpers.GetResourceCount();
+                    1 => "FCFS",
+                    2 => "SJF",
+                    3 => "SRTF",
+                    4 => "Round Robin",
+                    5 => "Priority Scheduling",
+                    _ => "Unknown"
+                };
+                
+                if (choice <= 5)
+                {
+                    // Show display mode menu
+                    CPUSchedulingDisplayModes.ShowDisplayModeMenu();
+                    int displayMode = CPUSchedulingDisplayModes.GetDisplayModeChoice();
 
-                    var totalResources = InputHelpers.GetTotalResources(numResources);
-                    var maxMatrix = InputHelpers.GetMaxMatrix(numProcesses, numResources);
-                    var allocationMatrix = InputHelpers.GetAllocationMatrix(numProcesses, numResources, totalResources);
-
-                    var result = BankerExecutor.ExecuteAlgorithm(totalResources, maxMatrix, allocationMatrix);
-                    DisplayHelpers.DisplayBankerResult(result);
-
+                    if (displayMode == 0) continue;
+                    else if (displayMode == 1)
+                        CPUSchedulingDisplayModes.RunAlgorithmShowAll(processes, choice, quantumTime, algoName);
+                    else if (displayMode == 2)
+                        CPUSchedulingDisplayModes.RunAlgorithmStepByStep(processes, choice, quantumTime, algoName);
+                }
+                else if (choice == 6)
+                {
+                    // Run all algorithms
+                    var allResults = CPUSchedulingHelpers.RunAllAlgorithms(processes, quantumTime);
+                    CPUSchedulingHelpers.DisplayComparisonTable(allResults);
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("\nNhấn phím bất kỳ để trở lại menu Banker's Algorithm...");
+                    Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
                     Console.ResetColor();
                     Console.ReadKey(true);
                 }
             }
         }
 
-        // ============ PAGE REPLACEMENT ============
-        static void HandlePageReplacement()
+        static void HandleCPUSchedulingFileInput()
         {
-            UIEngine ui2 = new UIEngine();
+            DisplayHelpers.SafeClear();
+            var testCases = FileHelpers.GetAvailableCPUTestCases();
 
+            if (testCases.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Không tìm thấy test case nào!");
+                Console.ResetColor();
+                Console.ReadKey(true);
+                return;
+            }
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nCác Test Case có sẵn:");
+            Console.ResetColor();
+            for (int i = 0; i < testCases.Count; i++)
+            {
+                Console.WriteLine($"  [{i + 1}] {testCases[i]}");
+            }
+
+            Console.Write("\nChọn test case (1-" + testCases.Count + "): ");
+            if (!int.TryParse(Console.ReadLine(), out int choice) || choice < 1 || choice > testCases.Count)
+            {
+                Console.WriteLine("Lựa chọn không hợp lệ!");
+                Console.ReadKey(true);
+                return;
+            }
+
+            try
+            {
+                var (processes, quantumTime) = FileHelpers.LoadCPUSchedulingTestCase(testCases[choice - 1]);
+
+                while (true)
+                {
+                    DisplayHelpers.SafeClear();
+                    MenuHelpers.ShowCPUSchedulingMenu();
+
+                    int algoChoice = MenuHelpers.GetCPUSchedulingChoice();
+                    if (algoChoice == 0) break;
+
+                    string algoName = algoChoice switch
+                    {
+                        1 => "FCFS",
+                        2 => "SJF",
+                        3 => "SRTF",
+                        4 => "Round Robin",
+                        5 => "Priority Scheduling",
+                        _ => "Unknown"
+                    };
+
+                    if (algoChoice <= 5)
+                    {
+                        // Show display mode menu
+                        CPUSchedulingDisplayModes.ShowDisplayModeMenu();
+                        int displayMode = CPUSchedulingDisplayModes.GetDisplayModeChoice();
+
+                        if (displayMode == 0) continue;
+                        else if (displayMode == 1)
+                            CPUSchedulingDisplayModes.RunAlgorithmShowAll(processes, algoChoice, quantumTime, algoName);
+                        else if (displayMode == 2)
+                            CPUSchedulingDisplayModes.RunAlgorithmStepByStep(processes, algoChoice, quantumTime, algoName);
+                    }
+                    else if (algoChoice == 6)
+                    {
+                        var allResults = CPUSchedulingHelpers.RunAllAlgorithms(processes, quantumTime);
+                        CPUSchedulingHelpers.DisplayComparisonTable(allResults);
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
+                        Console.ResetColor();
+                        Console.ReadKey(true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Lỗi: {ex.Message}");
+                Console.ResetColor();
+                Console.ReadKey(true);
+            }
+        }
+
+        // ============ DEADLOCK SYSTEM ============
+        static DeadlockSystemData? systemData = null;
+
+        static void HandleDeadlockSystem()
+        {
+            while (true)
+            {
+                MenuHelpers.ShowDeadlockSystemMenu();
+                int choice = MenuHelpers.GetDeadlockSystemChoice();
+
+                if (choice == 0) break;
+
+                try
+                {
+                    switch (choice)
+                    {
+                        case 1:
+                            HandleDeadlockManualInput();
+                            break;
+                        case 2:
+                            HandleDeadlockFileInput();
+                            break;
+                        case 3:
+                            if (systemData == null)
+                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                            else
+                                HandleDeadlockSafetyCheck();
+                            break;
+                        case 4:
+                            if (systemData == null)
+                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                            else
+                                HandleDeadlockResourceRequest();
+                            break;
+                        case 5:
+                            if (systemData == null)
+                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                            else
+                                HandleDeadlockDetection();
+                            break;
+                        case 6:
+                            if (systemData == null)
+                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                            else
+                                HandleDeadlockRecovery();
+                            break;
+                    }
+
+                    if (choice >= 1 && choice <= 6)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
+                        Console.ResetColor();
+                        Console.ReadKey(true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"\n[Lỗi] {ex.Message}");
+                    Console.ResetColor();
+                    Console.ReadKey(true);
+                }
+            }
+        }
+
+        static void HandleDeadlockManualInput()
+        {
+            systemData = DeadlockSystemHelpers.InputSystemData();
+        }
+
+        static void HandleDeadlockFileInput()
+        {
+            DisplayHelpers.SafeClear();
+            var testCases = FileHelpers.GetAvailableDeadlockTestCases();
+
+            if (testCases.Count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Không tìm thấy test case nào!");
+                Console.ResetColor();
+                Console.ReadKey(true);
+                return;
+            }
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("\nCác Test Case Deadlock có sẵn:");
+            Console.ResetColor();
+            for (int i = 0; i < testCases.Count; i++)
+            {
+                Console.WriteLine($"  [{i + 1}] {testCases[i]}");
+            }
+
+            Console.Write("\nChọn test case (1-" + testCases.Count + "): ");
+            if (!int.TryParse(Console.ReadLine(), out int choice) || choice < 1 || choice > testCases.Count)
+            {
+                Console.WriteLine("Lựa chọn không hợp lệ!");
+                Console.ReadKey(true);
+                return;
+            }
+
+            try
+            {
+                var (numProc, numRes, max, allocation, available) = FileHelpers.LoadDeadlockTestCase(testCases[choice - 1]);
+                systemData = new DeadlockSystemData(numProc, numRes);
+                systemData.Total = new int[numRes];
+                Array.Copy(available, systemData.Available = new int[numRes], numRes);
+                systemData.Max = max;
+                systemData.Allocation = allocation;
+                for (int j = 0; j < numRes; j++)
+                    systemData.Total[j] = available[j];
+                for (int i = 0; i < numProc; i++)
+                {
+                    for (int j = 0; j < numRes; j++)
+                        systemData.Total[j] += allocation[i][j];
+                }
+                DeadlockSystemLogic.CalculateInitialState(systemData);
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Lỗi: {ex.Message}");
+                Console.ResetColor();
+                Console.ReadKey(true);
+            }
+        }
+
+        static void HandleDeadlockSafetyCheck()
+        {
+            DisplayHelpers.SafeClear();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
+            Console.WriteLine("║      KIỂM TRA TRẠNG THÁI AN TOÀN                   ║");
+            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+            Console.ResetColor();
+
+            if (systemData == null) return;
+
+            DeadlockSystemHelpers.DisplayMatrices(systemData);
+
+            var safeSeq = new List<int>();
+            bool isSafe = DeadlockSystemLogic.IsSafeState(systemData, out safeSeq, printTrace: true);
+
+            DeadlockSystemHelpers.DisplaySafetyResult(isSafe, safeSeq);
+        }
+
+        static void HandleDeadlockResourceRequest()
+        {
+            DisplayHelpers.SafeClear();
+
+            if (systemData == null) return;
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
+            Console.WriteLine("║      YÊU CẦU CẤP PHÁT TÀI NGUYÊN                    ║");
+            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+            Console.ResetColor();
+
+            Console.Write("\nChọn tiến trình (1-" + systemData.NumProcesses + "): ");
+            if (!int.TryParse(Console.ReadLine(), out int pid) || pid < 1 || pid > systemData.NumProcesses)
+            {
+                Console.WriteLine("Tiến trình không hợp lệ!");
+                return;
+            }
+
+            var request = DeadlockSystemHelpers.InputResourceRequest(systemData.NumResources, pid - 1);
+
+            bool isApproved = DeadlockSystemLogic.RequestResources(systemData, pid - 1, request, out string message);
+            DeadlockSystemHelpers.DisplayResourceRequestResult(isApproved, message);
+        }
+
+        static void HandleDeadlockDetection()
+        {
+            DisplayHelpers.SafeClear();
+
+            if (systemData == null) return;
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
+            Console.WriteLine("║      PHÁT HIỆN DEADLOCK                             ║");
+            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+            Console.ResetColor();
+
+            var requestMat = DeadlockSystemHelpers.InputRequestMatrix(systemData.NumProcesses, systemData.NumResources);
+
+            var dlList = new List<int>();
+            bool hasDeadlock = DeadlockSystemLogic.DetectDeadlock(systemData, requestMat, out dlList);
+
+            DeadlockSystemHelpers.DisplayDeadlockResult(hasDeadlock, dlList);
+        }
+
+        static void HandleDeadlockRecovery()
+        {
+            DisplayHelpers.SafeClear();
+
+            if (systemData == null) return;
+
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
+            Console.WriteLine("║      PHỤC HỒI DEADLOCK                              ║");
+            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
+            Console.ResetColor();
+
+            var steps = DeadlockSystemLogic.RecoverDeadlock(systemData, out var aborted);
+            DeadlockSystemHelpers.DisplayRecoverySteps(steps, systemData);
+        }
+
+        // ============ PAGE REPLACEMENT ============
+        static void HandlePageReplacement(UIEngine ui)
+        {
             while (true)
             {
                 DisplayHelpers.SafeClear();
@@ -136,13 +434,13 @@ namespace PageReplacementDemo
                 
                 if (choice == 5)
                 {
-                    HandlePageReplacementComparison(ui2);
+                    HandlePageReplacementComparison(ui);
                     continue;
                 }
                 
                 if (choice == 6)
                 {
-                    HandlePageReplacementFileInput(ui2);
+                    HandlePageReplacementFileInput(ui);
                     continue;
                 }
 
@@ -154,14 +452,14 @@ namespace PageReplacementDemo
                 string algorithmName = GetAlgorithmName(choice);
 
                 algorithm.Initialize(pageCount, frameCount, referenceString);
-                ui2.RunStepByStepAccumulative(algorithm, algorithmName, pageCount, frameCount, referenceString);
+                ui.RunStepByStepAccumulative(algorithm, algorithmName, pageCount, frameCount, referenceString);
             }
         }
 
         /// <summary>
         /// Xử lý tính năng so sánh các thuật toán.
         /// </summary>
-        static void HandlePageReplacementComparison(UIEngine ui2)
+        static void HandlePageReplacementComparison(UIEngine ui)
         {
             DisplayHelpers.SafeClear();
             
@@ -182,13 +480,13 @@ namespace PageReplacementDemo
             optAlgo.Initialize(pageCount, frameCount, referenceString);
 
             // Hiển thị so sánh một lượt (không nhấn enter từng bước)
-            ui2.RunComparisonFromFileNoStep(fifoAlgo, lruAlgo, clockAlgo, optAlgo, pageCount, frameCount, referenceString);
+            ui.RunComparisonFromFileNoStep(fifoAlgo, lruAlgo, clockAlgo, optAlgo, pageCount, frameCount, referenceString);
         }
 
         /// <summary>
         /// Xử lý tính năng đọc dữ liệu từ file.
         /// </summary>
-        static void HandlePageReplacementFileInput(UIEngine ui2)
+        static void HandlePageReplacementFileInput(UIEngine ui)
         {
             DisplayHelpers.SafeClear();
             Console.ForegroundColor = ConsoleColor.Cyan;
@@ -270,7 +568,7 @@ namespace PageReplacementDemo
                             var algorithmName = GetAlgorithmName(choice);
 
                             algorithm.Initialize(pageCount, frameCount, referenceString);
-                            ui2.RunStepByStepAccumulative(algorithm, algorithmName, pageCount, frameCount, referenceString);
+                            ui.RunStepByStepAccumulative(algorithm, algorithmName, pageCount, frameCount, referenceString);
                             return;
                         }
                         else if (choice == 5)
@@ -286,7 +584,7 @@ namespace PageReplacementDemo
                             clockAlgo.Initialize(pageCount, frameCount, referenceString);
                             optAlgo.Initialize(pageCount, frameCount, referenceString);
 
-                            ui2.RunComparisonFromFileNoStep(fifoAlgo, lruAlgo, clockAlgo, optAlgo, pageCount, frameCount, referenceString);
+                            ui.RunComparisonFromFileNoStep(fifoAlgo, lruAlgo, clockAlgo, optAlgo, pageCount, frameCount, referenceString);
                             return;
                         }
                     }

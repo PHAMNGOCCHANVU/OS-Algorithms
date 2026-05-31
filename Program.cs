@@ -315,19 +315,11 @@ namespace PageReplacementDemo
 
             try
             {
-                var (numProc, numRes, max, allocation, available) = FileHelpers.LoadDeadlockTestCase(testCases[choice - 1]);
+                var (numProc, numRes, total, max, allocation) = FileHelpers.LoadDeadlockTestCase(testCases[choice - 1]);
                 systemData = new DeadlockSystemData(numProc, numRes);
-                systemData.Total = new int[numRes];
-                Array.Copy(available, systemData.Available = new int[numRes], numRes);
+                Array.Copy(total, systemData.Total!, numRes);
                 systemData.Max = max;
                 systemData.Allocation = allocation;
-                for (int j = 0; j < numRes; j++)
-                    systemData.Total[j] = available[j];
-                for (int i = 0; i < numProc; i++)
-                {
-                    for (int j = 0; j < numRes; j++)
-                        systemData.Total[j] += allocation[i][j];
-                }
                 DeadlockSystemLogic.CalculateInitialState(systemData);
             }
             catch (Exception ex)

@@ -49,50 +49,62 @@ public static class FileHelpers
     }
 
     /// <summary>
-    /// Load Deadlock test case from file
+    /// Load Deadlock test case from file (same format as OS/deadlock.cpp readFromFile).
     /// Format:
     /// Line 1: P R (number of processes, number of resources)
-    /// Lines 2 to P+1: Max[i][0] Max[i][1] ... (max resources for process i)
-    /// Lines P+2 to 2P+1: Allocation[i][0] Allocation[i][1] ... (allocated resources for process i)
-    /// Line 2P+2: Available[0] Available[1] ... (available resources)
+    /// Line 2: Total[0] Total[1] ... (total resources in the system)
+    /// Lines 3 to P+2: Max[i][0] Max[i][1] ...
+    /// Lines P+3 to 2P+2: Allocation[i][0] Allocation[i][1] ...
+    /// Available and Need are computed by CalculateInitialState after load.
     /// </summary>
-    public static (int NumProc, int NumRes, int[][] Max, int[][] Allocation, int[] Available) 
+    public static (int NumProc, int NumRes, int[] Total, int[][] Max, int[][] Allocation)
         LoadDeadlockTestCase(string filename)
     {
         var filePath = Path.Combine(TestDataFolder, filename);
-        
+
         if (!File.Exists(filePath))
             throw new FileNotFoundException($"Test case file not found: {filePath}");
 
-        var lines = File.ReadAllLines(filePath);
+        var lines = File.ReadAllLines(filePath)
+            .Select(l => l.Trim())
+            .Where(l => l.Length > 0)
+            .ToArray();
+
         if (lines.Length < 2)
             throw new InvalidOperationException("Invalid test case file format");
 
-        var firstLine = lines[0].Trim().Split();
+        var firstLine = lines[0].Split();
         int p = int.Parse(firstLine[0]);
         int r = int.Parse(firstLine[1]);
 
-        // Read Max matrix
+        int expectedLines = 2 + p + p;
+        if (lines.Length < expectedLines)
+            throw new InvalidOperationException(
+                $"Invalid test case file format: expected {expectedLines} lines, got {lines.Length}");
+
+        var total = lines[1].Split().Select(int.Parse).ToArray();
+        if (total.Length != r)
+            throw new InvalidOperationException($"Total resources line must have {r} values");
+
         var max = new int[p][];
         for (int i = 0; i < p; i++)
         {
-            var parts = lines[i + 1].Trim().Split();
-            max[i] = Array.ConvertAll(parts, int.Parse);
+            var parts = lines[i + 2].Split().Select(int.Parse).ToArray();
+            if (parts.Length != r)
+                throw new InvalidOperationException($"Max matrix row P{i + 1} must have {r} values");
+            max[i] = parts;
         }
 
-        // Read Allocation matrix
         var allocation = new int[p][];
         for (int i = 0; i < p; i++)
         {
-            var parts = lines[p + i + 1].Trim().Split();
-            allocation[i] = Array.ConvertAll(parts, int.Parse);
+            var parts = lines[i + 2 + p].Split().Select(int.Parse).ToArray();
+            if (parts.Length != r)
+                throw new InvalidOperationException($"Allocation matrix row P{i + 1} must have {r} values");
+            allocation[i] = parts;
         }
 
-        // Read Available resources
-        var availParts = lines[2 * p + 1].Trim().Split();
-        var available = Array.ConvertAll(availParts, int.Parse);
-
-        return (p, r, max, allocation, available);
+        return (p, r, total, max, allocation);
     }
 
     /// <summary>

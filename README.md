@@ -127,7 +127,7 @@ Khi chạy ứng dụng, bạn sẽ nhìn thấy menu chính với 3 tùy chọn
 4. Nhập thông số (Arrival Time, Burst Time, Priority, Quantum) và xem kết quả
 
 ### Deadlock Management (6 Tính Năng)
-1. **Manual Input** - Nhập dữ liệu hệ thống: số tiến trình, số tài nguyên, Max matrix, Allocation matrix
+1. **Manual Input** - Nhập dữ liệu hệ thống: số tiến trình, số tài nguyên, Total, Max matrix, Allocation matrix
 2. **File Input** - Tải test case từ `TestData/Deadlock_*.txt`
 3. **Safety Check** - Kiểm tra hệ thống ở trạng thái an toàn (Banker's algorithm)
 4. **Resource Request** - Xử lý yêu cầu cấp phát tài nguyên (4-bước kiểm tra)
@@ -204,7 +204,7 @@ Khi chạy ứng dụng, bạn sẽ nhìn thấy menu chính với 3 tùy chọn
 1. Tạo file `TestData/CPUScheduling_TestCaseN.txt` hoặc `TestData/Deadlock_*.txt`
 2. Format:
    - **CPU Scheduling**: Dòng 1 = N (số tiến trình); Dòng 2+ = AT BT PR (nếu Priority)
-   - **Deadlock**: Dòng 1 = P R; Dòng 2+ = Max matrix; Dòng P+2+ = Allocation; Dòng 2P+2 = Available
+   - **Deadlock**: Dòng 1 = P R; Dòng 2 = Total; Dòng 3..P+2 = Max; Dòng P+3..2P+2 = Allocation (Available tính tự động)
 
 ### Chạy tests
 ```bash

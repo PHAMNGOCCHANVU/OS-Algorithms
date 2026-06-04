@@ -1,257 +1,89 @@
-namespace PageReplacementDemo.Program;
-
+using System;
+using System.Linq;
 using PageReplacementDemo.Algorithms.DeadlockDetection;
 
-/// <summary>
-/// Display và Input helpers cho Deadlock System
-/// </summary>
+namespace PageReplacementDemo.Program;
+
 public static class DeadlockSystemHelpers
 {
-    // ========== DISPLAY HELPERS ==========
-    private static void PrintVector(int[] vec)
-    {
-        Console.Write("[ ");
-        foreach (int x in vec) Console.Write(x + " ");
-        Console.Write("]");
-    }
-
-    private static void PrintMatrix(int[][] matrix, string label = "")
-    {
-        if (!string.IsNullOrEmpty(label))
-            Console.WriteLine(label);
-        foreach (var row in matrix)
-        {
-            Console.Write("  ");
-            PrintVector(row);
-            Console.WriteLine();
-        }
-    }
-
-    /// <summary>
-    /// Hiển thị các ma trận hệ thống (Allocation, Max, Need, Available)
-    /// </summary>
-    public static void DisplayMatrices(DeadlockSystemData data)
-    {
-        if (data.Allocation == null || data.Max == null || data.Need == null || data.Available == null)
-            return;
-
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine("\n=== THÔNG TIN HỆ THỐNG ===\n");
-        Console.ResetColor();
-
-        Console.WriteLine("1. Ma trận Cấp Phát (Allocation):");
-        PrintMatrix(data.Allocation);
-
-        Console.WriteLine("\n2. Ma trận Nhu Cầu Tối Đa (Max):");
-        PrintMatrix(data.Max);
-
-        Console.WriteLine("\n3. Ma trận Nhu Cầu (Need = Max - Allocation):");
-        PrintMatrix(data.Need);
-
-        Console.Write("\n4. Tài Nguyên Sẵn Có (Available): ");
-        PrintVector(data.Available);
-        Console.WriteLine("\n");
-    }
-
-    /// <summary>
-    /// Hiển thị kết quả Safety Check
-    /// </summary>
-    public static void DisplaySafetyResult(bool isSafe, List<int> sequence)
-    {
-        if (isSafe)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("\n✓ TRẠNG THÁI AN TOÀN");
-            Console.Write("Chuỗi an toàn: < ");
-            foreach (int p in sequence)
-                Console.Write($"P{p + 1} ");
-            Console.WriteLine(">");
-            Console.ResetColor();
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\n✗ TRẠNG THÁI NGUY HIỂM");
-            Console.ResetColor();
-        }
-    }
-
-    /// <summary>
-    /// Hiển thị kết quả Resource Request
-    /// </summary>
-    public static void DisplayResourceRequestResult(bool isApproved, string message)
-    {
-        if (isApproved)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("✓ " + message);
-            Console.ResetColor();
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("⚠ " + message);
-            Console.ResetColor();
-        }
-    }
-
-    /// <summary>
-    /// Hiển thị kết quả Deadlock Detection
-    /// </summary>
-    public static void DisplayDeadlockResult(bool hasDeadlock, List<int> dlList)
-    {
-        if (!hasDeadlock)
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("✓ Hệ thống KHÔNG CÓ DEADLOCK");
-            Console.ResetColor();
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("✗ Hệ thống ĐANG CÓ DEADLOCK");
-            Console.Write("  Các tiến trình bị kết: ");
-            foreach (int p in dlList)
-                Console.Write($"P{p + 1} ");
-            Console.WriteLine();
-            Console.ResetColor();
-        }
-    }
-
-    /// <summary>
-    /// Hiển thị các bước Recovery
-    /// </summary>
-    public static void DisplayRecoverySteps(List<string> steps, DeadlockSystemData finalData)
-    {
-        Console.WriteLine("\n--- TÓTEM TẮT QUÁ TRÌNH PHỤC HỒI ---");
-        foreach (var step in steps)
-            Console.WriteLine(step);
-
-        Console.WriteLine("\n--- TRẠNG THÁI CUỐI CÙNG ---");
-        Console.Write("Available: ");
-        PrintVector(finalData.Available!);
-        Console.WriteLine("\n");
-    }
-
-    // ========== INPUT HELPERS ==========
-    /// <summary>
-    /// Nhập dữ liệu hệ thống từ bàn phím
-    /// </summary>
+    // --- HÀM TƯƠNG ĐƯƠNG VỚI readFromConsole TRONG C++ ---
     public static DeadlockSystemData InputSystemData()
     {
         DisplayHelpers.SafeClear();
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("╔═════════════════════════════════════════════════════╗");
-        Console.WriteLine("║   NHẬP DỮ LIỆU HỆ THỐNG TỪ BÀN PHÍM               ║");
-        Console.WriteLine("╚═════════════════════════════════════════════════════╝");
-        Console.ResetColor();
-
-        Console.Write("\nSố tiến trình (N): ");
-        if (!int.TryParse(Console.ReadLine(), out int n) || n <= 0)
-        {
-            Console.WriteLine("Giá trị không hợp lệ!");
-            return new DeadlockSystemData();
-        }
-
+        Console.Write("Số tiến trình (N): ");
+        int n = int.Parse(Console.ReadLine()!);
         Console.Write("Số loại tài nguyên (M): ");
-        if (!int.TryParse(Console.ReadLine(), out int m) || m <= 0)
-        {
-            Console.WriteLine("Giá trị không hợp lệ!");
-            return new DeadlockSystemData();
-        }
+        int m = int.Parse(Console.ReadLine()!);
 
         var data = new DeadlockSystemData(n, m);
+        data.Total = new int[m];
 
-        // Total resources
-        Console.Write($"\n1. Tổng tài nguyên ({m} số): ");
-        var totalInput = Console.ReadLine()?.Split();
-        if (totalInput != null && totalInput.Length == m)
-        {
-            for (int j = 0; j < m; j++)
-                if (int.TryParse(totalInput[j], out int val))
-                    data.Total![j] = val;
-        }
+        Console.Write($"1. Tổng tài nguyên (Total - {m} số): ");
+        var totalStr = Console.ReadLine()!.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        for (int j = 0; j < m; j++) data.Total[j] = int.Parse(totalStr[j]);
 
-        // Max matrix
-        Console.WriteLine("\n2. Ma trận Nhu Cầu Tối Đa (Max) - Nhập từng hàng:");
+        Console.WriteLine("2. Ma trận Yêu cầu tối đa (Max):");
         for (int i = 0; i < n; i++)
         {
             Console.Write($"   P{i + 1}: ");
-            var input = Console.ReadLine()?.Split();
-            if (input != null && input.Length == m)
-            {
-                for (int j = 0; j < m; j++)
-                    if (int.TryParse(input[j], out int val))
-                        data.Max![i][j] = val;
-            }
+            var maxStr = Console.ReadLine()!.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int j = 0; j < m; j++) data.Max![i][j] = int.Parse(maxStr[j]);
         }
 
-        // Allocation matrix
-        Console.WriteLine("\n3. Ma trận Cấp Phát (Allocation) - Nhập từng hàng:");
+        Console.WriteLine("3. Ma trận Đã cấp phát (Allocation):");
         for (int i = 0; i < n; i++)
         {
             Console.Write($"   P{i + 1}: ");
-            var input = Console.ReadLine()?.Split();
-            if (input != null && input.Length == m)
-            {
-                for (int j = 0; j < m; j++)
-                    if (int.TryParse(input[j], out int val))
-                        data.Allocation![i][j] = val;
-            }
+            var allocStr = Console.ReadLine()!.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int j = 0; j < m; j++) data.Allocation![i][j] = int.Parse(allocStr[j]);
         }
 
-        // Calculate initial state
         DeadlockSystemLogic.CalculateInitialState(data);
-
         return data;
     }
 
-    /// <summary>
-    /// Nhập Resource Request cho một tiến trình
-    /// </summary>
-    public static int[] InputResourceRequest(int m, int processId)
+    // --- CÁC HÀM XỬ LÝ NHẬP INPUT TRUNG GIAN CHO PROGRAM.CS ---
+    public static void DisplayMatrices(DeadlockSystemData data)
     {
-        var request = new int[m];
-        Console.Write($"Nhập Request cho P{processId + 1} ({m} số): ");
-        var input = Console.ReadLine()?.Split();
-        if (input != null && input.Length == m)
-        {
-            for (int j = 0; j < m; j++)
-                if (int.TryParse(input[j], out int val))
-                    request[j] = val;
-        }
-        return request;
+        // Trống vì IsSafeState đã lo liệu việc hiển thị
     }
 
-    /// <summary>
-    /// Nhập Request Matrix cho tất cả tiến trình
-    /// </summary>
-    public static int[][] InputRequestMatrix(int n, int m)
+    public static void DisplaySafetyResult(bool isSafe, System.Collections.Generic.List<int> safeSeq)
     {
-        var requestMat = new int[n][];
-        Console.WriteLine($"\nNhập ma trận Request ({n} tiến trình, {m} tài nguyên):");
-        for (int i = 0; i < n; i++)
-        {
-            Console.Write($"   P{i + 1}: ");
-            var input = Console.ReadLine()?.Split();
-            requestMat[i] = new int[m];
-            if (input != null && input.Length == m)
-            {
-                for (int j = 0; j < m; j++)
-                    if (int.TryParse(input[j], out int val))
-                        requestMat[i][j] = val;
-            }
-        }
-        return requestMat;
+        // Trống vì IsSafeState đã in luôn kết quả chuẩn xác như C++
     }
 
-    /// <summary>
-    /// In menu chọn thao tác tiếp theo
-    /// </summary>
-    public static void PrintContinueMenu()
+    public static int[] InputResourceRequest(int numRes, int pid)
     {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("\nNhấn [1] để tiếp tục, [0] để quay lại: ");
+        Console.Write($"Nhập vector Request từ P{pid + 1} ({numRes} số): ");
+        var parts = Console.ReadLine()!.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        return parts.Select(int.Parse).ToArray();
+    }
+
+    public static void DisplayResourceRequestResult(bool isApproved, string message) { }
+
+    public static int[][] InputRequestMatrix(int numProc, int numRes)
+    {
+        var reqMat = new int[numProc][];
+
+        Console.ForegroundColor = ConsoleColor.Blue;
+        Console.WriteLine("\n┌───────────────────────────────────────────────────────┐");
+        Console.WriteLine("│                  PHÁT HIỆN DEADLOCK                   │");
+        Console.WriteLine("└───────────────────────────────────────────────────────┘");
         Console.ResetColor();
+
+        Console.WriteLine("Nhập ma trận Request hiện tại (Yêu cầu đang bị treo từng tiến trình):");
+        for (int i = 0; i < numProc; i++)
+        {
+            Console.Write($"  - P{i + 1} ({numRes} số): ");
+            var parts = Console.ReadLine()!.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != numRes) reqMat[i] = new int[numRes];
+            else reqMat[i] = parts.Select(int.Parse).ToArray();
+        }
+        return reqMat;
     }
+
+    public static void DisplayDeadlockResult(bool hasDeadlock, System.Collections.Generic.List<int> dlList) { }
+
+    public static void DisplayRecoverySteps(System.Collections.Generic.List<string> steps, DeadlockSystemData data) { }
 }

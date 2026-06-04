@@ -1,6 +1,5 @@
-﻿using PageReplacementDemo.Algorithms.PageReplacementAlgo;
+using PageReplacementDemo.Algorithms.PageReplacementAlgo;
 using PageReplacementDemo.Algorithms.CPUschedulingAlgo;
-using PageReplacementDemo.Algorithms.BankerAlgo;
 using PageReplacementDemo.Algorithms.DeadlockDetection;
 using PageReplacementDemo.Models.PageReplacementAlgo;
 using PageReplacementDemo.Program;
@@ -40,7 +39,7 @@ namespace PageReplacementDemo
                 MenuHelpers.ShowMainMenu();
 
                 int mainChoice = MenuHelpers.GetMainMenuChoice();
-                
+
                 switch (mainChoice)
                 {
                     case 1:
@@ -102,7 +101,7 @@ namespace PageReplacementDemo
                     5 => "Priority Scheduling",
                     _ => "Unknown"
                 };
-                
+
                 if (choice <= 5)
                 {
                     // Show display mode menu
@@ -236,25 +235,25 @@ namespace PageReplacementDemo
                             break;
                         case 3:
                             if (systemData == null)
-                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                                Console.WriteLine("\n[Cảnh báo] Vui lòng nhập dữ liệu trước!");
                             else
                                 HandleDeadlockSafetyCheck();
                             break;
                         case 4:
                             if (systemData == null)
-                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                                Console.WriteLine("\n[Cảnh báo] Vui lòng nhập dữ liệu trước!");
                             else
                                 HandleDeadlockResourceRequest();
                             break;
                         case 5:
                             if (systemData == null)
-                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                                Console.WriteLine("\n[Cảnh báo] Vui lòng nhập dữ liệu trước!");
                             else
                                 HandleDeadlockDetection();
                             break;
                         case 6:
                             if (systemData == null)
-                                Console.WriteLine("\n[Lỗi] Vui lòng nhập dữ liệu trước (options 1 hoặc 2)!");
+                                Console.WriteLine("\n[Cảnh báo] Vui lòng nhập dữ liệu trước!");
                             else
                                 HandleDeadlockRecovery();
                             break;
@@ -334,12 +333,6 @@ namespace PageReplacementDemo
         static void HandleDeadlockSafetyCheck()
         {
             DisplayHelpers.SafeClear();
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
-            Console.WriteLine("║      KIỂM TRA TRẠNG THÁI AN TOÀN                   ║");
-            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
-            Console.ResetColor();
-
             if (systemData == null) return;
 
             DeadlockSystemHelpers.DisplayMatrices(systemData);
@@ -353,62 +346,44 @@ namespace PageReplacementDemo
         static void HandleDeadlockResourceRequest()
         {
             DisplayHelpers.SafeClear();
-
             if (systemData == null) return;
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
-            Console.WriteLine("║      YÊU CẦU CẤP PHÁT TÀI NGUYÊN                    ║");
-            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
-            Console.ResetColor();
-
-            Console.Write("\nChọn tiến trình (1-" + systemData.NumProcesses + "): ");
+            Console.Write("\nNhập thứ tự tiến trình xin tài nguyên (1 - " + systemData.NumProcesses + "): ");
             if (!int.TryParse(Console.ReadLine(), out int pid) || pid < 1 || pid > systemData.NumProcesses)
             {
-                Console.WriteLine("Tiến trình không hợp lệ!");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("[Lỗi] Thứ tự tiến trình không tồn tại!");
+                Console.ResetColor();
+                return;
+            }
+
+            if (systemData.Terminated != null && systemData.Terminated[pid - 1])
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"[Lỗi] Tiến trình P{pid} đã bị hệ thống hủy! Không thể yêu cầu.");
+                Console.ResetColor();
                 return;
             }
 
             var request = DeadlockSystemHelpers.InputResourceRequest(systemData.NumResources, pid - 1);
-
-            bool isApproved = DeadlockSystemLogic.RequestResources(systemData, pid - 1, request, out string message);
-            DeadlockSystemHelpers.DisplayResourceRequestResult(isApproved, message);
+            DeadlockSystemLogic.RequestResources(systemData, pid - 1, request, out _);
         }
 
         static void HandleDeadlockDetection()
         {
             DisplayHelpers.SafeClear();
-
             if (systemData == null) return;
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
-            Console.WriteLine("║      PHÁT HIỆN DEADLOCK                             ║");
-            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
-            Console.ResetColor();
-
-            var requestMat = DeadlockSystemHelpers.InputRequestMatrix(systemData.NumProcesses, systemData.NumResources);
-
-            var dlList = new List<int>();
-            bool hasDeadlock = DeadlockSystemLogic.DetectDeadlock(systemData, requestMat, out dlList);
-
-            DeadlockSystemHelpers.DisplayDeadlockResult(hasDeadlock, dlList);
+            systemData.RequestMatrix = DeadlockSystemHelpers.InputRequestMatrix(systemData.NumProcesses, systemData.NumResources);
+            DeadlockSystemLogic.DetectDeadlock(systemData, out _);
         }
 
         static void HandleDeadlockRecovery()
         {
             DisplayHelpers.SafeClear();
-
             if (systemData == null) return;
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine("\n╔═════════════════════════════════════════════════════╗");
-            Console.WriteLine("║      PHỤC HỒI DEADLOCK                              ║");
-            Console.WriteLine("╚═════════════════════════════════════════════════════╝");
-            Console.ResetColor();
-
-            var steps = DeadlockSystemLogic.RecoverDeadlock(systemData, out var aborted);
-            DeadlockSystemHelpers.DisplayRecoverySteps(steps, systemData);
+            DeadlockSystemLogic.RecoverDeadlock(systemData);
         }
 
         // ============ PAGE REPLACEMENT ============
@@ -420,16 +395,16 @@ namespace PageReplacementDemo
                 MenuHelpers.ShowPageReplacementMenu();
 
                 int choice = MenuHelpers.GetPageReplacementChoice();
-                
+
                 if (choice == 0)
                     break;
-                
+
                 if (choice == 5)
                 {
                     HandlePageReplacementComparison(ui);
                     continue;
                 }
-                
+
                 if (choice == 6)
                 {
                     HandlePageReplacementFileInput(ui);
@@ -454,7 +429,7 @@ namespace PageReplacementDemo
         static void HandlePageReplacementComparison(UIEngine ui)
         {
             DisplayHelpers.SafeClear();
-            
+
             int pageCount = InputHelpers.GetPageCount();
             int frameCount = InputHelpers.GetFrameCount();
             int[] referenceString = InputHelpers.GetReferenceString(pageCount);

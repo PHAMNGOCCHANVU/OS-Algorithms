@@ -65,7 +65,7 @@ public static class DeadlockSystemHelpers
     public static int[][] InputRequestMatrix(int numProc, int numRes)
     {
         var reqMat = new int[numProc][];
-
+        
         Console.ForegroundColor = ConsoleColor.Blue;
         Console.WriteLine("\n┌───────────────────────────────────────────────────────┐");
         Console.WriteLine("│                  PHÁT HIỆN DEADLOCK                   │");
@@ -84,6 +84,6 @@ public static class DeadlockSystemHelpers
     }
 
     public static void DisplayDeadlockResult(bool hasDeadlock, System.Collections.Generic.List<int> dlList) { }
-
+    
     public static void DisplayRecoverySteps(System.Collections.Generic.List<string> steps, DeadlockSystemData data) { }
 }

@@ -54,6 +54,7 @@ public static class MenuHelpers
         Console.WriteLine("  [3] SRTF (Shortest Remaining Time First)");
         Console.WriteLine("  [4] Round Robin");
         Console.WriteLine("  [5] Priority Scheduling");
+	Console.WriteLine("  [6] So sánh tất cả giải thuật");   
         Console.WriteLine();
         Console.WriteLine("  [0] Quay lại Menu Chính");
         Console.WriteLine();
@@ -63,9 +64,9 @@ public static class MenuHelpers
     {
         while (true)
         {
-            Console.Write("Nhập lựa chọn (0-5): ");
+            Console.Write("Nhập lựa chọn (0-6): ");
             string? input = Console.ReadLine();
-            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 5)
+            if (int.TryParse(input, out int choice) && choice >= 0 && choice <= 6)
             {
                 return choice;
             }

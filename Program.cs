@@ -91,7 +91,7 @@ namespace PageReplacementDemo
                     quantumTime = InputHelpers.GetQuantumTime();
                 }
 
-                var processes = InputHelpers.GetProcesses(numProcesses, choice == 5);
+                var processes = InputHelpers.GetProcesses(numProcesses, choice == 5 || choice == 6);
                 string algoName = choice switch
                 {
                     1 => "FCFS",
@@ -117,12 +117,11 @@ namespace PageReplacementDemo
                 else if (choice == 6)
                 {
                     // Run all algorithms
-                    var allResults = CPUSchedulingHelpers.RunAllAlgorithms(processes, quantumTime);
-                    CPUSchedulingHelpers.DisplayComparisonTable(allResults);
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
-                    Console.ResetColor();
-                    Console.ReadKey(true);
+                    CPUSchedulingHelpers.RunAndDisplayCompareAll(processes, quantumTime);
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
+    Console.ResetColor();
+    Console.ReadKey(true);
                 }
             }
         }
@@ -193,12 +192,11 @@ namespace PageReplacementDemo
                     }
                     else if (algoChoice == 6)
                     {
-                        var allResults = CPUSchedulingHelpers.RunAllAlgorithms(processes, quantumTime);
-                        CPUSchedulingHelpers.DisplayComparisonTable(allResults);
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
-                        Console.ResetColor();
-                        Console.ReadKey(true);
+                        CPUSchedulingHelpers.RunAndDisplayCompareAll(processes, quantumTime);
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("\nNhấn phím bất kỳ để tiếp tục...");
+    Console.ResetColor();
+    Console.ReadKey(true);
                     }
                 }
             }

@@ -175,22 +175,17 @@ public static class CPUSchedulingDisplayModes
     /// Hiển thị Gantt Chart từng bước
     /// </summary>
     private static void DisplayGanttChartStepByStep(List<(int, int)> ganttChart)
+{
+    var partial = new List<(int, int)>();
+    foreach (var step in ganttChart)
     {
-        string ganttStr = "";
-        foreach (var (pid, endTime) in ganttChart)
-        {
-            if (pid == 0)
-                ganttStr += $"[{endTime}]Idle ";
-            else
-                ganttStr += $"[{endTime}]P{pid} ";
-
-            // Delay giữa các step
-            System.Threading.Thread.Sleep(STEP_DELAY_MS);
-            Console.Clear();
-            Console.WriteLine("--- GANTT CHART (STEP-BY-STEP) ---");
-            Console.WriteLine(ganttStr);
-        }
+        partial.Add(step);
+        Thread.Sleep(STEP_DELAY_MS);
+        Console.Clear();
+        Console.WriteLine("--- GANTT CHART (STEP-BY-STEP) ---");
+        GanttChart.Display(partial);   // gọi đúng method như ShowAll
     }
+}
 
     /// <summary>
     /// Hiển thị bảng kết quả từng tiến trình
